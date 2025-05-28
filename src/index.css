@@ -1,0 +1,44 @@
+@import "react-calendar/dist/Calendar.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+.react-calendar {
+  @apply bg-gray-700 border-gray-600 rounded-lg shadow-lg text-gray-100;
+}
+.react-calendar__navigation button {
+  @apply text-indigo-300 hover:bg-gray-600;
+}
+.react-calendar__navigation button:disabled {
+  @apply text-gray-500 bg-gray-700;
+}
+.react-calendar__month-view__weekdays__weekday {
+  @apply text-indigo-300 font-semibold;
+}
+.react-calendar__month-view__days__day--neighboringMonth {
+  @apply text-gray-500;
+}
+.react-calendar__tile {
+  @apply hover:bg-gray-600 rounded-md text-gray-100;
+}
+.react-calendar__tile:disabled {
+  @apply bg-gray-700 text-gray-500;
+}
+.react-calendar__tile--now {
+  @apply bg-indigo-700 bg-opacity-50 text-indigo-100;
+}
+.react-calendar__tile--active {
+  @apply bg-indigo-500 text-white;
+}
+
+.selected-day {
+  @apply bg-green-500 text-white !important;
+}

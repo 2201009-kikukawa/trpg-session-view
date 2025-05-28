@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6", // ES5やES6など、サポートしたいブラウザに応じて
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true, // JavaScriptファイルの共存を許可
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true, // 厳格な型チェックを有効化 (推奨)
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true, // create-react-appがBabelでトランスパイルするため
+    "jsx": "react-jsx", // React 17以降の新しいJSXトランスフォーム
+    "baseUrl": "src" // baseUrlを設定するとインポートパスが簡潔に
+  },
+  "include": [
+    "src" // TypeScriptのコンパイル対象ディレクトリ
+  ]
+}
