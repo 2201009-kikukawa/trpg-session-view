@@ -21,3 +21,51 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Firebase関連
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
+# 環境設定ファイル
+.env
+.env.*.local
+
+# エディタ関連
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS関連
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ログファイル
+*.log
+logs/
+
+# 一時ファイル
+.tmp/
+*.tmp
+*.temp
+
+# パッケージマネージャー関連
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# TypeScript関連
+*.tsbuildinfo
+
+# Tailwind CSS
+.tailwindcss-*
+
+# 本番用設定ファイル（機密情報が含まれる場合）
+/src/services/firebaseConfig.prod.ts
