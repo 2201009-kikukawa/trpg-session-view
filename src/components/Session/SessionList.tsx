@@ -1,3 +1,4 @@
+// src/components/Session/SessionList.tsx
 import { useState, useEffect, useContext, JSX } from "react";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
 import { fetchUsername as fetchUsernameUtil } from "../../services/userUtils";
@@ -5,7 +6,7 @@ import SessionCard from "./SessionCard";
 import {
   collection,
   query,
-  where,
+  // where, // where might not be needed if all filtering is client-side based on new logic
   onSnapshot,
   orderBy,
   QuerySnapshot,
@@ -22,78 +23,87 @@ function SessionList({ onSelectSession }: SessionListProps): JSX.Element {
   const firebaseContext = useContext(
     FirebaseContext
   ) as FirebaseContextType | null;
-  const db = firebaseContext?.db;
-  const userId = firebaseContext?.userId; // userIdはSessionCardに渡すために保持
-  const appId = firebaseContext?.appId;
+  const db = firebaseContext?.db; //
+  const userId = firebaseContext?.userId; //
+  const appId = firebaseContext?.appId; //
 
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const [gmUsernames, setGmUsernames] = useState<{ [key: string]: string }>({});
+  const [sessions, setSessions] = useState<Session[]>([]); //
+  const [loading, setLoading] = useState<boolean>(true); //
+  const [error, setError] = useState<string>(""); //
+  const [gmUsernames, setGmUsernames] = useState<{ [key: string]: string }>({}); //
 
   useEffect(() => {
     if (!db || !appId) {
-      setLoading(false);
-      setError("データベース接続情報が不完全です。");
+      //
+      setLoading(false); //
+      setError("データベース接続情報が不完全です。"); //
       return;
     }
 
-    // 全てのステータスのセッションを取得し、クライアント側でフィルタリングまたは表示を工夫する
-    // もしくは、複数のクエリを組み合わせるか、より複雑なバックエンドロジックを検討
     const sessionsCollectionRef = collection(
-      db,
-      `artifacts/${appId}/public/data/sessions`
+      //
+      db, //
+      `artifacts/${appId}/public/data/sessions` //
     );
     const q = query(
-      sessionsCollectionRef,
-      orderBy("createdAt", "desc") // 作成日時の降順でソート
-      // where('status', 'in', ['募集開始', '日程調整中']) // 例：募集開始と日程調整中のみ
+      sessionsCollectionRef, //
+      orderBy("createdAt", "desc") //
     );
 
     const unsubscribe = onSnapshot(
-      q,
+      //
+      q, //
       async (snapshot: QuerySnapshot<DocumentData>) => {
-        setLoading(true);
+        //
+        setLoading(true); //
         const sessionsData: Session[] = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...(docSnap.data() as Omit<Session, "id">), // 型アサーション
+          //
+          id: docSnap.id, //
+          ...(docSnap.data() as Omit<Session, "id">), //
         }));
 
-        const newGmUsernames = { ...gmUsernames };
-        const gmIdsToFetch = sessionsData
-          .map((s) => s.gmId)
-          .filter((id) => id && !newGmUsernames[id]); // 未取得のGM IDのみ
+        const newGmUsernames = { ...gmUsernames }; //
+        const gmIdsToFetch = sessionsData //
+          .map((s) => s.gmId) //
+          .filter((id) => id && !newGmUsernames[id]); //
 
         if (gmIdsToFetch.length > 0) {
+          //
           await Promise.all(
+            //
             gmIdsToFetch.map(async (gmId) => {
+              //
               const username = await fetchUsernameUtil(
-                db as Firestore,
-                appId,
-                gmId
+                //
+                db as Firestore, //
+                appId, //
+                gmId //
               );
               if (username) {
-                newGmUsernames[gmId] = username;
+                //
+                newGmUsernames[gmId] = username; //
               }
             })
           );
-          setGmUsernames(newGmUsernames);
+          setGmUsernames(newGmUsernames); //
         }
-        setSessions(sessionsData);
-        setLoading(false);
-        setError("");
+        setSessions(sessionsData); //
+        setLoading(false); //
+        setError(""); //
       },
       (err: Error) => {
-        console.error("セッションの取得エラー:", err);
-        setError("セッションの読み込み中にエラーが発生しました。");
-        setLoading(false);
+        //
+        console.error("セッションの取得エラー:", err); //
+        setError("セッションの読み込み中にエラーが発生しました。"); //
+        setLoading(false); //
       }
     );
 
-    return () => unsubscribe();
-  }, [db, appId]); // gmUsernamesは内部で更新されるため依存配列から削除、fetchUsernameUtilも通常変わらない
+    return () => unsubscribe(); //
+  }, [db, appId]); //
 
   if (loading) {
+    //
     return (
       <div className="text-center text-gray-300 text-lg">
         セッションを読み込み中...
@@ -102,32 +112,49 @@ function SessionList({ onSelectSession }: SessionListProps): JSX.Element {
   }
 
   if (error) {
-    return <div className="text-center text-red-500 text-lg">{error}</div>;
+    //
+    return <div className="text-center text-red-500 text-lg">{error}</div>; //
   }
 
-  const displaySessions = sessions.filter(
-    (s) =>
-      s.status === "募集開始" ||
-      (userId && s.participants.includes(userId)) ||
-      (userId && s.gmId === userId)
-  );
-  // もしくは、全セッション表示しつつ、Card側で見た目を調整
+  // Updated filtering logic
+  const displaySessions = sessions.filter((s) => {
+    //
+    // Condition 1: User is involved (participant or GM)
+    const isUserInvolved =
+      userId && (s.participants.includes(userId) || s.gmId === userId); //
+    if (isUserInvolved) {
+      return true; // Always show if the user is involved.
+    }
+
+    // Condition 2: User is not involved
+    // Show if the session is not full AND has a status relevant for public viewing.
+    const isNotFull = s.participants.length < s.maxPlayers; //
+    // Relevant statuses for public display if not full (e.g., users can still potentially join or see active recruitment)
+    const isPubliclyRelevantStatus =
+      s.status === "募集開始" || s.status === "日程調整中"; //
+
+    return isNotFull && isPubliclyRelevantStatus;
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {displaySessions.length === 0 ? (
+      {displaySessions.length === 0 ? ( //
         <p className="col-span-full text-center text-gray-400 text-xl">
           現在表示できるセッションはありません。
         </p>
       ) : (
-        displaySessions.map((session) => (
-          <SessionCard
-            key={session.id}
-            session={session}
-            gmUsername={gmUsernames[session.gmId]}
-            onSelectSession={onSelectSession}
-          />
-        ))
+        displaySessions.map(
+          (
+            session //
+          ) => (
+            <SessionCard
+              key={session.id} //
+              session={session} //
+              gmUsername={gmUsernames[session.gmId]} //
+              onSelectSession={onSelectSession} //
+            />
+          )
+        )
       )}
     </div>
   );
